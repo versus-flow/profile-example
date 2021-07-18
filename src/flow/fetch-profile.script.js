@@ -11,9 +11,12 @@ export async function fetchProfile(address) {
       fcl.script`
         import Profile from 0xProfile
 
-        pub fun main(address: Address): Profile.Public {
-          return Profile.find(address)
-        }
+        pub fun main(address: Address): &{Profile.Public}? {
+          return getAccount(address)
+        .getCapability<&{Profile.Public}>(Profile.publicPath)
+        .borrow()
+    }
+
       `,
       fcl.args([fcl.arg(address, t.Address)]),
     ])

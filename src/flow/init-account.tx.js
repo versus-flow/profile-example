@@ -11,7 +11,7 @@ export async function initAccount(name, description) {
       fcl.transaction`
         import Profile from 0xProfile
 
-        transaction(username: String, description: String, allowStoring: bool) {
+        transaction(username: String, description: String) {
           // We want the account's address for later so we can verify if the account was initialized properly
           let address: Address
 
@@ -19,15 +19,15 @@ export async function initAccount(name, description) {
             // save the address for the post check
             self.address = account.address
 
-						
-					  let cap= accoun.getCapability<&{Profile.Public}>(Profile.publicPath)
+
+            let cap= account.getCapability<&{Profile.Public}>(Profile.publicPath)
             // Only initialize the account if it hasn't already been initialized
             if !cap.check() {
-						   let profile <-Profile.createUser(name:name, description: description, allowStoringFollowers: true, tags:[])
-               account.save(<- profile, to: Profile.privatePath)
+               let profile <-Profile.createUser(name:username, description: description, allowStoringFollowers: true, tags:[])
+               account.save(<- profile, to: Profile.storagePath)
 
               // This creates the public capability that lets applications read the profile's info
-              account.link<&Profile.Base{Profile.Public}>(Profile.publicPath, target: Profile.privatePath)
+             account.link<&Profile.User{Profile.Public}>(Profile.publicPath, target: Profile.storagePath)
             }
           }
         }
@@ -35,7 +35,7 @@ export async function initAccount(name, description) {
       fcl.payer(fcl.authz), // current user is responsible for paying for the transaction
       fcl.proposer(fcl.authz), // current user acting as the nonce
       fcl.authorizations([fcl.authz]), // current user will be first AuthAccount
-      fcl.limit(35), // set the compute limit
+      fcl.limit(999), // set the compute limit
       fcl.args([fcl.arg(name, t.String), fcl.arg(description, t.String)]),
     ])
     .then(fcl.decode)
